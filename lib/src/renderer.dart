@@ -1,7 +1,5 @@
 library mustache.renderer;
 
-@MirrorsUsed(metaTargets: const [m.MustacheMirrorsUsedAnnotation])
-import 'dart:mirrors';
 import 'package:mustache/mustache.dart' as m;
 import 'lambda_context.dart';
 import 'node.dart';
@@ -235,21 +233,9 @@ class Renderer extends Visitor {
 
     if (lenient && !_validTag.hasMatch(name)) return noSuchProperty;
 
-    var instance = reflect(object);
-    var field = instance.type.instanceMembers[new Symbol(name)];
-    if (field == null) return noSuchProperty;
 
-    var invocation = null;
-    if ((field is VariableMirror) ||
-        ((field is MethodMirror) && (field.isGetter))) {
-      invocation = instance.getField(field.simpleName);
-    } else if ((field is MethodMirror) && (field.parameters.where((p) => !p.isOptional).length == 0)) {
-      invocation = instance.invoke(field.simpleName, []);
-    }
-    if (invocation == null) {
-      return noSuchProperty;
-    }
-    return invocation.reflectee;
+    throw Exception("No reflection allowed");
+
   }
 
   m.TemplateException error(String message, Node node) =>
