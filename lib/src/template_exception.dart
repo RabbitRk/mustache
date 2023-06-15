@@ -3,17 +3,21 @@ library mustache.template_exception;
 import 'package:mustache/mustache.dart' as m;
 
 class TemplateException implements m.TemplateException {
-  TemplateException(this.message, this.templateName, this.source, this.offset);
-
   final String message;
   final String templateName;
   final String source;
   final int offset;
 
+  TemplateException(
+      {this.message = "",
+      this.templateName = "",
+      this.source = "",
+      this.offset = 0});
+
   bool _isUpdated = false;
-  int _line;
-  int _column;
-  String _context;
+  int _line = 0;
+  int _column = 0;
+  String _context = "";
 
   int get line {
     _update();
@@ -32,9 +36,9 @@ class TemplateException implements m.TemplateException {
 
   String toString() {
     var list = [];
-    if (templateName != null) list.add(templateName);
-    if (line != null) list.add(line);
-    if (column != null) list.add(column);
+    list.add(templateName);
+    list.add(line);
+    list.add(column);
     var location = list.isEmpty ? '' : ' (${list.join(':')})';
     return '$message$location\n$context';
   }
@@ -44,9 +48,7 @@ class TemplateException implements m.TemplateException {
     if (_isUpdated) return;
     _isUpdated = true;
 
-    if (source == null ||
-        offset == null ||
-        (offset < 0 || offset > source.length)) return;
+    if ((offset < 0 || offset > source.length)) return;
 
     // Find line and character column.
     int lineNum = 1;

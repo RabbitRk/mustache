@@ -6,7 +6,7 @@ import 'src/template.dart' as t;
 
 /// Use new Template(source) instead.
 @deprecated
-Template parse(String source, {bool lenient: false}) =>
+Template parse(String source, {bool lenient = false}) =>
     new Template(source, lenient: lenient);
 
 /// A Template can be efficiently rendered multiple times with different
@@ -37,7 +37,7 @@ abstract class Template {
   void render(values, StringSink sink);
 }
 
-typedef Template PartialResolver(String templateName);
+typedef Template? PartialResolver(String templateName);
 
 typedef Object LambdaFunction(LambdaContext context);
 

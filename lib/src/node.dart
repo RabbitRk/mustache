@@ -10,13 +10,17 @@ abstract class Node {
   final int end;
 
   void accept(Visitor visitor);
+
   void visitChildren(Visitor visitor) {}
 }
 
 abstract class Visitor {
   void visitText(TextNode node);
+
   void visitVariable(VariableNode node);
+
   void visitSection(SectionNode node);
+
   void visitPartial(PartialNode node);
 }
 
@@ -36,7 +40,7 @@ class TextNode extends Node {
 }
 
 class VariableNode extends Node {
-  VariableNode(this.name, int start, int end, {this.escape: true})
+  VariableNode(this.name, int start, int end, {this.escape = true})
       : super(start, end);
 
   final String name;
@@ -49,7 +53,7 @@ class VariableNode extends Node {
 
 class SectionNode extends Node {
   SectionNode(this.name, int start, int end, this.delimiters,
-      {this.inverse: false})
+      {this.inverse = false})
       : contentStart = end,
         super(start, end);
 
@@ -57,7 +61,7 @@ class SectionNode extends Node {
   final String delimiters;
   final bool inverse;
   final int contentStart;
-  int contentEnd; // Set in parser when close tag is parsed.
+  int contentEnd = 0; // Set in parser when close tag is parsed.
   final List<Node> children = <Node>[];
 
   void accept(Visitor visitor) => visitor.visitSection(this);

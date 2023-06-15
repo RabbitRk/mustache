@@ -24,32 +24,36 @@ class LambdaContext implements m.LambdaContext {
   }
 
   TemplateException _error(String msg) {
-    return new TemplateException(
-        msg, _renderer.templateName, _renderer.source, _node.start);
+    return TemplateException(
+        message: msg,
+        templateName: _renderer.templateName,
+        source: _renderer.source,
+        offset: _node.start);
   }
 
   /// Render the current section tag in the current context and return the
   /// result as a string.
-  String renderString({Object value}) {
+  String renderString({Object? value}) {
     _checkClosed();
-    if (_node is! SectionNode) _error(
-        'LambdaContext.renderString() can only be called on section tags.');
+    if (_node is! SectionNode)
+      _error(
+          'LambdaContext.renderString() can only be called on section tags.');
     var sink = new StringBuffer();
-    _renderSubtree(sink, value);
+    _renderSubtree(sink, value!);
     return sink.toString();
   }
 
-  void _renderSubtree(StringSink sink, Object value) {
+  void _renderSubtree(StringSink sink, Object? value) {
     var renderer = new Renderer.subtree(_renderer, sink);
-    SectionNode section = _node;
-    if (value != null) renderer.push(value);
+    SectionNode section = _node as SectionNode;
+    renderer.push(value);
     renderer.render(section.children);
   }
 
-  void render({Object value}) {
+  void render({Object? value}) {
     _checkClosed();
-    if (_node is! SectionNode) _error(
-        'LambdaContext.render() can only be called on section tags.');
+    if (_node is! SectionNode)
+      _error('LambdaContext.render() can only be called on section tags.');
     _renderSubtree(_renderer.sink, value);
   }
 
@@ -64,7 +68,7 @@ class LambdaContext implements m.LambdaContext {
 
     if (_node is! SectionNode) return '';
 
-    SectionNode node = _node;
+    SectionNode node = _node as SectionNode;
 
     var nodes = node.children;
 
@@ -78,14 +82,14 @@ class LambdaContext implements m.LambdaContext {
   }
 
   /// Evaluate the string as a mustache template using the current context.
-  String renderSource(String source, {Object value}) {
+  String renderSource(String source, {Object? value}) {
     _checkClosed();
     var sink = new StringBuffer();
 
     // Lambdas used for sections should parse with the current delimiters.
     var delimiters = '{{ }}';
     if (_node is SectionNode) {
-      SectionNode node = _node;
+      SectionNode node = _node as SectionNode;
       delimiters = node.delimiters;
     }
 
@@ -95,7 +99,7 @@ class LambdaContext implements m.LambdaContext {
     var renderer = new Renderer.lambda(
         _renderer, source, _renderer.indent, sink, delimiters);
 
-    if (value != null) renderer.push(value);
+    renderer.push(value);
     renderer.render(nodes);
 
     return sink.toString();

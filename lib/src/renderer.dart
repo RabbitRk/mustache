@@ -52,7 +52,7 @@ class Renderer extends Visitor {
   void write(Object output) => sink.write(output.toString());
 
   void render(List<Node> nodes) {
-    if (indent == null || indent == '') {
+    if (indent == '') {
       nodes.forEach((n) => n.accept(this));
     } else if (nodes.isNotEmpty) {
       // Special case to make sure there is not an extra indent after the last
@@ -70,9 +70,9 @@ class Renderer extends Visitor {
     }
   }
 
-  void visitText(TextNode node, {bool lastNode: false}) {
+  void visitText(TextNode node, {bool lastNode = false}) {
     if (node.text == '') return;
-    if (indent == null || indent == '') {
+    if (indent == '') {
       write(node.text);
     } else if (lastNode && node.text.runes.last == _NEWLINE) {
       // Don't indent after the last line in a template.
@@ -102,7 +102,7 @@ class Renderer extends Visitor {
       var output = !node.escape || !htmlEscapeValues
           ? valueString
           : _htmlEscape(valueString);
-      if (output != null) write(output);
+ write(output);
     }
   }
 
@@ -185,8 +185,8 @@ class Renderer extends Visitor {
 
   void visitPartial(PartialNode node) {
     var partialName = node.name;
-    Template template =
-        partialResolver == null ? null : partialResolver(partialName);
+    Template? template =
+        partialResolver == null ? null : partialResolver(partialName) as Template;
     if (template != null) {
       var renderer = new Renderer.partial(this, template, node.indent);
       var nodes = getTemplateNodes(template);
@@ -213,7 +213,7 @@ class Renderer extends Visitor {
       }
     }
     for (int i = 1; i < parts.length; i++) {
-      if (object == null || object == noSuchProperty) {
+      if (object == noSuchProperty) {
         return noSuchProperty;
       }
       object = _getNamedProperty(object, parts[i]);
@@ -239,7 +239,11 @@ class Renderer extends Visitor {
   }
 
   m.TemplateException error(String message, Node node) =>
-      new TemplateException(message, templateName, source, node.start);
+      new TemplateException(
+          message: message,
+          templateName: templateName,
+          source: source,
+          offset: node.start);
 
   static const Map<int, String> _htmlEscapeMap = const {
     _AMP: '&amp;',

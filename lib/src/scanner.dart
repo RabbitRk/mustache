@@ -4,7 +4,7 @@ import 'token.dart';
 import 'template_exception.dart';
 
 class Scanner {
-  Scanner(String source, this._templateName, String delimiters)
+  Scanner(String source, String delimiters, String templateName)
       : _source = source,
         _itr = source.runes.iterator {
     if (source == '') {
@@ -27,24 +27,27 @@ class Scanner {
       _closeDelimiter = delimiters.codeUnits[4];
     } else {
       throw new TemplateException(
-          'Invalid delimiter string $delimiters', null, null, null);
+          message: 'Invalid delimiter string $delimiters',
+          templateName: "",
+          source: "",
+          offset: 0);
     }
   }
 
-  final String _templateName;
+  final String templateName = "";
   final String _source;
 
   final Iterator<int> _itr;
   int _offset = 0;
   int _c = 0;
 
-  final List<Token> _tokens = new List<Token>();
+  final List<Token> _tokens = [];
 
   // These can be changed by the change delimiter tag.
-  int _openDelimiter;
-  int _openDelimiterInner;
-  int _closeDelimiterInner;
-  int _closeDelimiter;
+  int _openDelimiter = 0;
+  int _openDelimiterInner = 0;
+  int _closeDelimiterInner = 0;
+  int _closeDelimiter = 0;
 
   List<Token> scan() {
     for (int c = _peek(); c != _EOF; c = _peek()) {
@@ -60,13 +63,13 @@ class Scanner {
       _read();
 
       // If only a single delimiter character then create a text token.
-      if (_openDelimiterInner != null && _peek() != _openDelimiterInner) {
+      if (_peek() != _openDelimiterInner) {
         var value = new String.fromCharCode(_openDelimiter);
         _append(TokenType.text, value, start, _offset);
         continue;
       }
 
-      if (_openDelimiterInner != null) _expect(_openDelimiterInner);
+ _expect(_openDelimiterInner);
 
       // Handle triple mustache.
       if (_openDelimiterInner == _OPEN_MUSTACHE &&
@@ -126,15 +129,18 @@ class Scanner {
 
     if (c == _EOF) {
       throw new TemplateException(
-          'Unexpected end of input', _templateName, _source, _offset - 1);
+          message: 'Unexpected end of input',
+          templateName: templateName,
+          source: _source,
+          offset: _offset - 1);
     } else if (c != expectedCharCode) {
-      throw new TemplateException(
-          'Unexpected character, '
-          'expected: ${new String.fromCharCode(expectedCharCode)}, '
-          'was: ${new String.fromCharCode(c)}',
-          _templateName,
-          _source,
-          _offset - 1);
+      throw TemplateException(
+          message: '''Unexpected character, 
+          expected: ${new String.fromCharCode(expectedCharCode)}, 
+          was: ${new String.fromCharCode(c)}''',
+          templateName: templateName,
+          source: _source,
+          offset: _offset - 1);
     }
   }
 
@@ -197,7 +203,7 @@ class Scanner {
 
     bool isCloseDelimiter(int c) =>
         (_closeDelimiterInner == null && c == _closeDelimiter) ||
-        (_closeDelimiterInner != null && c == _closeDelimiterInner);
+        (c == _closeDelimiterInner);
 
     for (int c = _peek(); c != _EOF && !isCloseDelimiter(c); c = _peek()) {
       start = _offset;
@@ -257,7 +263,7 @@ class Scanner {
     if (_peek() != _EOF) {
       int start = _offset;
 
-      if (_closeDelimiterInner != null) _expect(_closeDelimiterInner);
+ _expect(_closeDelimiterInner);
       _expect(_closeDelimiter);
 
       String value = new String.fromCharCodes(_closeDelimiterInner == null
@@ -298,7 +304,7 @@ class Scanner {
 
     c = _read();
     if (_isWhitespace(c)) {
-      _openDelimiterInner = null;
+      _openDelimiterInner = 0;
     } else {
       _openDelimiterInner = c;
     }
@@ -311,7 +317,7 @@ class Scanner {
       throw _error('Incorrect change delimiter tag.');
 
     if (_isWhitespace(_peek()) || _peek() == _EQUAL) {
-      _closeDelimiterInner = null;
+      _closeDelimiterInner = 0;
       _closeDelimiter = c;
     } else {
       _closeDelimiterInner = c;
@@ -324,17 +330,15 @@ class Scanner {
 
     _readWhile(_isWhitespace);
 
-    if (delimiterInner != null) _expect(delimiterInner);
+    _expect(delimiterInner);
     _expect(delimiter);
 
     // Create delimiter string.
     var buffer = new StringBuffer();
     buffer.writeCharCode(_openDelimiter);
-    if (_openDelimiterInner != null) buffer.writeCharCode(_openDelimiterInner);
+ buffer.writeCharCode(_openDelimiterInner);
     buffer.write(' ');
-    if (_closeDelimiterInner != null) {
-      buffer.writeCharCode(_closeDelimiterInner);
-    }
+    buffer.writeCharCode(_closeDelimiterInner);
     buffer.writeCharCode(_closeDelimiter);
     var value = buffer.toString();
 
@@ -342,7 +346,11 @@ class Scanner {
   }
 
   TemplateException _error(String message) {
-    return new TemplateException(message, _templateName, _source, _offset);
+    return TemplateException(
+        message: message,
+        templateName: templateName,
+        source: _source,
+        offset: _offset);
   }
 }
 

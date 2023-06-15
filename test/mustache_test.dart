@@ -12,7 +12,7 @@ const VALUE_NULL = 'Value was null or missing';
 const VALUE_MISSING = 'Value was missing';
 const UNCLOSED_TAG = 'Unclosed tag';
 
-Template parse(String source, {bool lenient: false}) =>
+Template parse(String source, {bool lenient = false}) =>
     new Template(source, lenient: lenient);
 
 class NestedVarClass {
@@ -360,7 +360,7 @@ Empty.
       var ex = renderFail(source, {
         "section": {"var": "bob"}
       });
-      expectFail(ex, 1, 22, 'Mismatched tag');
+      expectFail(ex, 1, 22, msgStartsWith: 'Mismatched tag');
     });
 
     test('Unexpected EOF', () {
@@ -368,7 +368,7 @@ Empty.
       var ex = renderFail(source, {
         "section": {"var": "bob"}
       });
-      expectFail(ex, 1, 31, UNEXPECTED_EOF);
+      expectFail(ex, 1, 31, msgStartsWith: UNEXPECTED_EOF);
     });
 
     test('Bad tag name, open section', () {
@@ -376,7 +376,7 @@ Empty.
       var ex = renderFail(source, {
         "section": {"var": "bob"}
       });
-      expectFail(ex, null, null, BAD_TAG_NAME);
+      expectFail(ex, null, null, msgStartsWith: BAD_TAG_NAME);
     });
 
     test('Bad tag name, close section', () {
@@ -384,7 +384,7 @@ Empty.
       var ex = renderFail(source, {
         "section": {"var": "bob"}
       });
-      expectFail(ex, null, null, BAD_TAG_NAME);
+      expectFail(ex, null, null, msgStartsWith: BAD_TAG_NAME);
     });
 
     test('Bad tag name, variable', () {
@@ -392,13 +392,13 @@ Empty.
       var ex = renderFail(source, {
         "section": {"var": "bob"}
       });
-      expectFail(ex, null, null, BAD_TAG_NAME);
+      expectFail(ex, null, null,msgStartsWith: BAD_TAG_NAME);
     });
 
     test('Missing variable', () {
       var source = r'{{#section}}_{{var}}_{{/section}}';
       var ex = renderFail(source, {"section": {}});
-      expectFail(ex, null, null, VALUE_MISSING);
+      expectFail(ex, null, null,msgStartsWith: VALUE_MISSING);
     });
 
     // Null variables shouldn't be a problem.
@@ -413,7 +413,7 @@ Empty.
     test('Unclosed section', () {
       var source = r'{{#section}}foo';
       var ex = renderFail(source, {"section": {}});
-      expectFail(ex, null, null, UNCLOSED_TAG);
+      expectFail(ex, null, null,msgStartsWith: UNCLOSED_TAG);
     });
   });
 
@@ -471,7 +471,7 @@ Empty.
 
   group('Partial tag', () {
     String _partialTest(Map values, Map sources, String renderTemplate,
-        {bool lenient: false}) {
+        {bool lenient = false}) {
       var templates = new Map<String, Template>();
       var resolver = (String name) => templates[name];
       for (var k in sources.keys) {
@@ -479,7 +479,7 @@ Empty.
             name: k, lenient: lenient, partialResolver: resolver);
       }
       var t = resolver(renderTemplate);
-      return t.renderString(values);
+      return t!.renderString(values);
     }
 
     test('basic', () {
@@ -795,15 +795,15 @@ renderFail(source, values) {
   }
 }
 
-expectFail(ex, int line, int column, [String msgStartsWith]) {
+expectFail(ex, int? line, int? column, {String msgStartsWith = ""}) {
   expect(ex is TemplateException, isTrue);
-  if (line != null) expect(ex.line, equals(line));
-  if (column != null) expect(ex.column, equals(column));
-  if (msgStartsWith != null) expect(ex.message, startsWith(msgStartsWith));
+ expect(ex.line, equals(line));
+ expect(ex.column, equals(column));
+ expect(ex.message, startsWith(msgStartsWith));
 }
 
 class Foo {
-  String bar;
-  Function lambda;
+  String? bar;
+  Function? lambda;
   jim() => 'bob';
 }
